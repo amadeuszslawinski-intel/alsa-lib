@@ -315,7 +315,9 @@ typedef enum _snd_pcm_state {
 	SND_PCM_STATE_SUSPENDED,
 	/** Hardware is disconnected */
 	SND_PCM_STATE_DISCONNECTED,
-	SND_PCM_STATE_LAST = SND_PCM_STATE_DISCONNECTED,
+	/** Detecting */
+	SND_PCM_STATE_DETECTING,
+	SND_PCM_STATE_LAST = SND_PCM_STATE_DETECTING,
 	/** Private - used internally in the library - do not use*/
 	SND_PCM_STATE_PRIVATE1 = 1024
 } snd_pcm_state_t;
@@ -551,6 +553,7 @@ int snd_pcm_sw_params(snd_pcm_t *pcm, snd_pcm_sw_params_t *params);
 int snd_pcm_prepare(snd_pcm_t *pcm);
 int snd_pcm_reset(snd_pcm_t *pcm);
 int snd_pcm_status(snd_pcm_t *pcm, snd_pcm_status_t *status);
+int snd_pcm_detect(snd_pcm_t *pcm);
 int snd_pcm_start(snd_pcm_t *pcm);
 int snd_pcm_drop(snd_pcm_t *pcm);
 int snd_pcm_drain(snd_pcm_t *pcm);

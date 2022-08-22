@@ -164,8 +164,13 @@ selected operation (playback or capture).
 
 \par SND_PCM_STATE_PREPARED
 The PCM device is prepared for operation. Application can use
-#snd_pcm_start() call, write or read data to start
-the operation.
+#snd_pcm_detect() to trigger detection or #snd_pcm_start() call,
+write or read data to start the operation.
+
+\par SND_PCM_STATE_DETECTING
+The PCM device has been set in detection mode and is partially running.
+On successful detection it can be moved into fully running state with
+#snd_pcm_start() call.
 
 \par SND_PCM_STATE_RUNNING
 The PCM device has been started and is running. It processes the samples. The stream can
@@ -459,6 +464,10 @@ as below.
 The #snd_pcm_prepare() function enters from #SND_PCM_STATE_SETUP
 to the #SND_PCM_STATE_PREPARED after a successful finish.
 
+\par snd_pcm_detect
+The #snd_pcm_detect() function enters
+the #SND_PCM_STATE_DETECTING after a successful finish.
+
 \par snd_pcm_start
 The #snd_pcm_start() function enters
 the #SND_PCM_STATE_RUNNING after a successful finish.
@@ -699,6 +708,7 @@ static int pcm_state_to_error(snd_pcm_state_t state)
 
 #define P_STATE(x)	(1U << SND_PCM_STATE_ ## x)
 #define P_STATE_RUNNABLE (P_STATE(PREPARED) | \
+			  P_STATE(DETECTING) | \
 			  P_STATE(RUNNING) | \
 			  P_STATE(XRUN) | \
 			  P_STATE(PAUSED) | \
@@ -1276,6 +1286,31 @@ int snd_pcm_reset(snd_pcm_t *pcm)
 		err = pcm->fast_ops->reset(pcm->fast_op_arg);
 	else
 		err = -ENOSYS;
+	snd_pcm_unlock(pcm->fast_op_arg);
+	return err;
+}
+
+/**
+ * \brief Set PCM in detection mode
+ * \param pcm PCM handle
+ * \return 0 on success otherwise a negative error code
+ *
+ * The function is thread-safe when built with the proper option.
+ */
+int snd_pcm_detect(snd_pcm_t *pcm)
+{
+	int err;
+
+	assert(pcm);
+	if (CHECK_SANITY(! pcm->setup)) {
+		SNDMSG("PCM not set up");
+		return -EIO;
+	}
+	err = bad_pcm_state(pcm, P_STATE(PREPARED), 0);
+	if (err < 0)
+		return err;
+	snd_pcm_lock(pcm->fast_op_arg);
+	err = __snd_pcm_detect(pcm);
 	snd_pcm_unlock(pcm->fast_op_arg);
 	return err;
 }
@@ -1920,6 +1955,7 @@ static const char *const snd_pcm_state_names[] = {
 	STATE(PAUSED),
 	STATE(SUSPENDED),
 	STATE(DISCONNECTED),
+	STATE(DETECTING),
 };
 
 static const char *const snd_pcm_access_names[] = {
@@ -7628,6 +7664,7 @@ snd_pcm_sframes_t snd_pcm_read_areas(snd_pcm_t *pcm, const snd_pcm_channel_area_
 		state = __snd_pcm_state(pcm);
 		switch (state) {
 		case SND_PCM_STATE_PREPARED:
+		case SND_PCM_STATE_DETECTING:
 			err = __snd_pcm_start(pcm);
 			if (err < 0)
 				goto _end;

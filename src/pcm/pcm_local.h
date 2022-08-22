@@ -162,6 +162,7 @@ typedef struct {
 	int (*status)(snd_pcm_t *pcm, snd_pcm_status_t *status); /* locked */
 	int (*prepare)(snd_pcm_t *pcm); /* locked */
 	int (*reset)(snd_pcm_t *pcm); /* locked */
+	int (*detect)(snd_pcm_t *pcm); /* locked */
 	int (*start)(snd_pcm_t *pcm); /* locked */
 	int (*drop)(snd_pcm_t *pcm); /* locked */
 	int (*drain)(snd_pcm_t *pcm); /* need own locking */
@@ -442,6 +443,13 @@ static inline snd_pcm_sframes_t __snd_pcm_avail_update(snd_pcm_t *pcm)
 	if (!pcm->fast_ops->avail_update)
 		return -ENOSYS;
 	return pcm->fast_ops->avail_update(pcm->fast_op_arg);
+}
+
+static inline int __snd_pcm_detect(snd_pcm_t *pcm)
+{
+	if (!pcm->fast_ops->detect)
+		return -ENOSYS;
+	return pcm->fast_ops->detect(pcm->fast_op_arg);
 }
 
 static inline int __snd_pcm_start(snd_pcm_t *pcm)

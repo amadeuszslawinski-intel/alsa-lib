@@ -715,6 +715,19 @@ static int snd_pcm_hw_reset(snd_pcm_t *pcm)
 	return query_status_and_control_data(hw);
 }
 
+static int snd_pcm_hw_detect(snd_pcm_t *pcm)
+{
+	snd_pcm_hw_t *hw = pcm->private_data;
+	int err;
+	issue_applptr(hw);
+	if (ioctl(hw->fd, SNDRV_PCM_IOCTL_DETECT) < 0) {
+		err = -errno;
+		SYSMSG("SNDRV_PCM_IOCTL_DETECT failed (%i)", err);
+		return err;
+	}
+	return 0;
+}
+
 static int snd_pcm_hw_start(snd_pcm_t *pcm)
 {
 	snd_pcm_hw_t *hw = pcm->private_data;
@@ -1419,6 +1432,7 @@ static snd_pcm_chmap_t *snd_pcm_hw_get_chmap(snd_pcm_t *pcm)
 	case SNDRV_PCM_STATE_DRAINING:
 	case SNDRV_PCM_STATE_PAUSED:
 	case SNDRV_PCM_STATE_SUSPENDED:
+	case SNDRV_PCM_STATE_DETECTING:
 		break;
 	default:
 		SYSMSG("Invalid PCM state for chmap_get: %s",
@@ -1545,6 +1559,7 @@ static const snd_pcm_fast_ops_t snd_pcm_hw_fast_ops = {
 	.delay = snd_pcm_hw_delay,
 	.prepare = snd_pcm_hw_prepare,
 	.reset = snd_pcm_hw_reset,
+	.detect = snd_pcm_hw_detect,
 	.start = snd_pcm_hw_start,
 	.drop = snd_pcm_hw_drop,
 	.drain = snd_pcm_hw_drain,
@@ -1576,6 +1591,7 @@ static const snd_pcm_fast_ops_t snd_pcm_hw_fast_ops_timer = {
 	.delay = snd_pcm_hw_delay,
 	.prepare = snd_pcm_hw_prepare,
 	.reset = snd_pcm_hw_reset,
+	.detect = snd_pcm_hw_detect,
 	.start = snd_pcm_hw_start,
 	.drop = snd_pcm_hw_drop,
 	.drain = snd_pcm_hw_drain,

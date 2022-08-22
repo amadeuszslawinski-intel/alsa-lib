@@ -311,7 +311,8 @@ typedef int __bitwise snd_pcm_state_t;
 #define	SNDRV_PCM_STATE_PAUSED		((snd_pcm_state_t) 6) /* stream is paused */
 #define	SNDRV_PCM_STATE_SUSPENDED	((snd_pcm_state_t) 7) /* hardware is suspended */
 #define	SNDRV_PCM_STATE_DISCONNECTED	((snd_pcm_state_t) 8) /* hardware is disconnected */
-#define	SNDRV_PCM_STATE_LAST		SNDRV_PCM_STATE_DISCONNECTED
+#define	SNDRV_PCM_STATE_DETECTING	((snd_pcm_state_t) 9) /* hardware is disconnected */
+#define	SNDRV_PCM_STATE_LAST		SNDRV_PCM_STATE_DETECTING
 
 enum {
 	SNDRV_PCM_MMAP_OFFSET_DATA = 0x00000000,
@@ -695,6 +696,7 @@ enum {
 #define SNDRV_PCM_IOCTL_READI_FRAMES	_IOR('A', 0x51, struct snd_xferi)
 #define SNDRV_PCM_IOCTL_WRITEN_FRAMES	_IOW('A', 0x52, struct snd_xfern)
 #define SNDRV_PCM_IOCTL_READN_FRAMES	_IOR('A', 0x53, struct snd_xfern)
+#define SNDRV_PCM_IOCTL_DETECT		_IO('A', 0x54)
 #define SNDRV_PCM_IOCTL_LINK		_IOW('A', 0x60, int)
 #define SNDRV_PCM_IOCTL_UNLINK		_IO('A', 0x61)
 
